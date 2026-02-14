@@ -40,7 +40,7 @@ function randomSpawnPoint(random: () => number): Vector2 {
 }
 
 export function getWaveSpawnBudget(wave: number): number {
-  return 4 + Math.floor(wave * 2.2);
+  return 4 + Math.floor(wave * 1.8);
 }
 
 export function getSpawnCooldownForWave(wave: number): number {

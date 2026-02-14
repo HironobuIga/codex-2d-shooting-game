@@ -256,6 +256,7 @@ function resolveBulletCollisions(
 function resolveContactDamage(state: GameState, dtMs: number): void {
   const dtSeconds = dtMs / 1000;
   let touched = false;
+  let maxContactDps = 0;
   for (const enemy of state.enemies) {
     if (
       circlesOverlap(
@@ -268,13 +269,14 @@ function resolveContactDamage(state: GameState, dtMs: number): void {
       )
     ) {
       touched = true;
-      state.player.hp -= enemy.contactDps * dtSeconds;
+      maxContactDps = Math.max(maxContactDps, enemy.contactDps);
       const push = normalize(state.player.x - enemy.x, state.player.y - enemy.y);
       state.player.x += push.x * PLAYER_CONTACT_PUSHBACK * dtSeconds;
       state.player.y += push.y * PLAYER_CONTACT_PUSHBACK * dtSeconds;
     }
   }
   if (touched) {
+    state.player.hp -= maxContactDps * dtSeconds;
     state.lastDamageFlashMs = Math.max(state.lastDamageFlashMs, 90);
   }
   keepInsideArena(state.player, state.player.radius, state.arenaWidth, state.arenaHeight);
