@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { applyEnemyDamage } from "../src/game/collision";
 import { ENEMY_STATS } from "../src/game/constants";
 import { computeHighScore, loadHighScore, saveHighScore, type StorageLike } from "../src/game/persistence";
-import { getWaveSpawnBudget } from "../src/game/spawn";
+import {
+  createEnemy,
+  getSpawnCooldownForWave,
+  getTimePressureTier,
+  getWaveSpawnBudget
+} from "../src/game/spawn";
 import { createInitialGameState, resetRun } from "../src/game/state";
 import type { AudioBus, EnemyType, InputSnapshot } from "../src/game/types";
 import { advanceGame, applyPowerUp } from "../src/game/update";
@@ -62,6 +67,7 @@ describe("enemy damage and defeat rules", () => {
         speed: ENEMY_STATS[enemyType].speed,
         contactDps: ENEMY_STATS[enemyType].contactDps,
         projectileDamage: ENEMY_STATS[enemyType].projectileDamage,
+        shootIntervalMs: ENEMY_STATS[enemyType].shootIntervalMs,
         shootCooldownMs: ENEMY_STATS[enemyType].shootIntervalMs,
         scoreValue: ENEMY_STATS[enemyType].scoreValue
       };
@@ -78,6 +84,34 @@ describe("wave scaling", () => {
     for (let wave = 1; wave <= 20; wave += 1) {
       expect(getWaveSpawnBudget(wave + 1)).toBeGreaterThanOrEqual(getWaveSpawnBudget(wave));
     }
+  });
+});
+
+describe("time pressure scaling", () => {
+  it("increases pressure tier as time passes", () => {
+    expect(getTimePressureTier(0)).toBe(0);
+    expect(getTimePressureTier(29_999)).toBe(0);
+    expect(getTimePressureTier(30_000)).toBe(1);
+    expect(getTimePressureTier(90_000)).toBeGreaterThan(getTimePressureTier(30_000));
+  });
+
+  it("increases spawn budget and reduces cooldown over time", () => {
+    expect(getWaveSpawnBudget(1, 180_000)).toBeGreaterThan(getWaveSpawnBudget(1, 0));
+    expect(getSpawnCooldownForWave(1, 180_000)).toBeLessThan(getSpawnCooldownForWave(1, 0));
+  });
+
+  it("spawns stronger enemies later in the run", () => {
+    const earlyState = createInitialGameState(0);
+    const lateState = createInitialGameState(0);
+    lateState.timeMs = 210_000;
+
+    const earlyEnemy = createEnemy(earlyState, "shooter", () => 0.5);
+    const lateEnemy = createEnemy(lateState, "shooter", () => 0.5);
+
+    expect(lateEnemy.hp).toBeGreaterThan(earlyEnemy.hp);
+    expect(lateEnemy.speed).toBeGreaterThan(earlyEnemy.speed);
+    expect(lateEnemy.projectileDamage).toBeGreaterThan(earlyEnemy.projectileDamage);
+    expect(lateEnemy.shootIntervalMs).toBeLessThan(earlyEnemy.shootIntervalMs);
   });
 });
 

@@ -1,3 +1,4 @@
+import { getTimePressureTier } from "./spawn";
 import type { GameState } from "./types";
 
 export function renderGameToText(state: GameState): string {
@@ -36,6 +37,7 @@ export function renderGameToText(state: GameState): string {
     })),
     score: Math.floor(state.score),
     wave: state.spawn.wave,
+    difficultyTier: getTimePressureTier(state.timeMs),
     nextWaveInMs: Number(state.spawn.nextWaveInMs.toFixed(1)),
     highScore: state.highScore
   };

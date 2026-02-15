@@ -32,6 +32,7 @@ export interface Enemy extends Vector2 {
   speed: number;
   contactDps: number;
   projectileDamage: number;
+  shootIntervalMs: number;
   shootCooldownMs: number;
   scoreValue: number;
 }

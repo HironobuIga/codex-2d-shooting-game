@@ -3,7 +3,6 @@ import {
   ENEMY_BULLET_RADIUS,
   ENEMY_BULLET_SPEED,
   ENEMY_BULLET_TTL_MS,
-  ENEMY_STATS,
   HEAL_AMOUNT,
   PLAYER_BULLET_DAMAGE,
   PLAYER_BULLET_SPEED,
@@ -147,7 +146,7 @@ function updateEnemies(
       enemy.shootCooldownMs = Math.max(0, enemy.shootCooldownMs - dtMs);
       if (enemy.shootCooldownMs === 0 && distance > 20) {
         state.bullets.push(createEnemyBullet(state, enemy, towardPlayer.x, towardPlayer.y));
-        enemy.shootCooldownMs = ENEMY_STATS.shooter.shootIntervalMs * (0.75 + random() * 0.65);
+        enemy.shootCooldownMs = enemy.shootIntervalMs * (0.75 + random() * 0.65);
       }
     }
 

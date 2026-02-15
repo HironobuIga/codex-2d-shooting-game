@@ -36,8 +36,32 @@ Original prompt: 2dのshooting gameを作成したいです。プランを考え
   - `long-survival` tuned: 4反復目でも `playing`, HP推移 `82.4 -> 72.4 -> 62.0 -> 50.8`, score 220, wave 1
   - `autoplay` baseline: `gameOver @ 15.1s`, maxWave 1, maxScore 115
   - `autoplay` tuned: `gameOver @ 44.0s`, maxWave 3, maxScore 625
-  - `autoplay` tuned(再計測): `gameOver @ 63.2s`, maxWave 4, maxScore 1085, `maxPowerUpsOnField=2`（パワーアップ出現確認）
+- `autoplay` tuned(再計測): `gameOver @ 63.2s`, maxWave 4, maxScore 1085, `maxPowerUpsOnField=2`（パワーアップ出現確認）
 - 調整後も `npm test` / `npm run build` は成功。Playwright実行で新規console/pageエラーなし。
+
+## Audio iteration
+- BGMを固定ドローンからWeb Audioのステップシーケンサに変更（ベース、コード、アルペジオ、キック、ハット）。
+- ミックスを安定させるためBGMチェーンに軽いコンプレッサを追加。
+- SFXの射撃/取得音を微調整し、BGMに埋もれにくい帯域へ変更。
+- `npm test` / `npm run build` は成功。
+- Playwright `audio-check`（2反復）で回帰確認し、`output/playwright/audio-check` に screenshot/state を出力。新規console/pageエラーなし。
+
+## Time-based difficulty iteration
+- 時間経過Tier（30秒ごと、最大12）を導入し、`spawn.ts` で難易度に反映。
+- 反映項目:
+  - Waveごとの敵数: 時間Tierに応じてボーナス追加
+  - 出現間隔: 時間Tierに応じて短縮（下限あり）
+  - 敵ステータス: HP/移動速度/接触DPS/射撃ダメージを時間Tierで増加
+  - shooterの射撃間隔: 時間Tierで短縮し、敵インスタンスごとに保持
+- `render_game_to_text` に `difficultyTier` を追加して可視化。
+- テスト追加:
+  - 時間Tierの単調増加
+  - 同Waveで時間経過により spawn budget増・spawn cooldown減
+  - 後半時間帯にspawnした敵ステータスが強化されること
+- 検証:
+  - `npm test`（9件）/ `npm run build` 成功
+  - Playwright `time-ramp-check` で `difficultyTier=2`、`wave=4`、`score=1215` 到達を確認
+  - 新規console/pageエラーなし
 
 ## TODO / Suggestions
 - 敵出現頻度とスコア配分のバランス調整（初期値は機能優先）。
