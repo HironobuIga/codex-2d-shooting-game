@@ -3,7 +3,6 @@ import {
   ENEMY_BULLET_RADIUS,
   ENEMY_BULLET_SPEED,
   ENEMY_BULLET_TTL_MS,
-  ENEMY_STATS,
   HEAL_AMOUNT,
   PLAYER_BULLET_DAMAGE,
   PLAYER_BULLET_SPEED,
@@ -147,7 +146,7 @@ function updateEnemies(
       enemy.shootCooldownMs = Math.max(0, enemy.shootCooldownMs - dtMs);
       if (enemy.shootCooldownMs === 0 && distance > 20) {
         state.bullets.push(createEnemyBullet(state, enemy, towardPlayer.x, towardPlayer.y));
-        enemy.shootCooldownMs = ENEMY_STATS.shooter.shootIntervalMs * (0.75 + random() * 0.65);
+        enemy.shootCooldownMs = enemy.shootIntervalMs * (0.75 + random() * 0.65);
       }
     }
 
@@ -256,6 +255,7 @@ function resolveBulletCollisions(
 function resolveContactDamage(state: GameState, dtMs: number): void {
   const dtSeconds = dtMs / 1000;
   let touched = false;
+  let maxContactDps = 0;
   for (const enemy of state.enemies) {
     if (
       circlesOverlap(
@@ -268,13 +268,14 @@ function resolveContactDamage(state: GameState, dtMs: number): void {
       )
     ) {
       touched = true;
-      state.player.hp -= enemy.contactDps * dtSeconds;
+      maxContactDps = Math.max(maxContactDps, enemy.contactDps);
       const push = normalize(state.player.x - enemy.x, state.player.y - enemy.y);
       state.player.x += push.x * PLAYER_CONTACT_PUSHBACK * dtSeconds;
       state.player.y += push.y * PLAYER_CONTACT_PUSHBACK * dtSeconds;
     }
   }
   if (touched) {
+    state.player.hp -= maxContactDps * dtSeconds;
     state.lastDamageFlashMs = Math.max(state.lastDamageFlashMs, 90);
   }
   keepInsideArena(state.player, state.player.radius, state.arenaWidth, state.arenaHeight);
